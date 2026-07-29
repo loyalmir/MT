@@ -100,12 +100,12 @@
   .sec-sub{font-size:12px;color:var(--muted);font-weight:600;margin-left:auto;}
 
   /* ---------- TIME ---------- */
-  .time-row{display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;}
+  .time-row{display:flex;align-items:flex-end;gap:8px;margin-bottom:16px;}
   .time-field{flex:1 1 0;min-width:0;}
   .time-field label{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px;letter-spacing:.5px;}
   .time-field input{
     width:100%;min-width:0;height:46px;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
-    padding:0 6px;font-family:'Gothic A1';font-size:15px;font-weight:700;color:var(--pine-deep);
+    padding:0 4px;font-family:'Gothic A1';font-size:12px;font-weight:700;color:var(--pine-deep);
     outline:none;text-align:center;box-sizing:border-box;
   }
   /* iOS/아이패드 native 타임픽커 값 가운데 정렬 (박스 밖으로 나가는 것 방지) */
@@ -295,9 +295,9 @@
      ========================================================= */
   const firebaseConfig = {
     apiKey: "",
-    authDomain: "",
-    databaseURL: "",   // 예: https://mt-xxxx-default-rtdb.firebaseio.com
-    projectId: "",
+    authDomain: "mtgo-dba8f.firebaseapp.com",
+    databaseURL: "https://mtgo-dba8f-default-rtdb.firebaseio.com",
+    projectId: "mtgo-dba8f",
     appId: ""
   };
   const ROOM = "main";                       // 모두가 함께 쓰는 방
