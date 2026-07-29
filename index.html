@@ -1,0 +1,356 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>우리 MT</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Black+Han+Sans&family=Gothic+A1:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg:#EDF2EB;
+    --ink:#1A231F;
+    --pine:#16453E;
+    --pine-deep:#0E332D;
+    --amber:#F2A93B;
+    --amber-deep:#D6871B;
+    --muted:#6E7D73;
+    --card:#FCFDFB;
+    --line:#DCE4DB;
+    --check:#1F8A6E;
+  }
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Gothic A1',sans-serif;
+    font-weight:500;
+    line-height:1.5;
+    padding:0 0 60px;
+    -webkit-font-smoothing:antialiased;
+  }
+  .wrap{max-width:520px;margin:0 auto;padding:0 16px;}
+
+  /* ---------- HERO ---------- */
+  .hero{
+    background:linear-gradient(160deg,var(--pine) 0%,var(--pine-deep) 100%);
+    border-radius:0 0 28px 28px;
+    padding:26px 22px 30px;
+    color:#EAF2EC;
+    position:relative;
+    overflow:hidden;
+  }
+  .hero::after{
+    content:"";position:absolute;right:-40px;top:-40px;width:160px;height:160px;
+    background:radial-gradient(circle,rgba(242,169,59,.28),transparent 70%);
+  }
+  .hero .eyebrow{
+    font-size:12px;letter-spacing:3px;font-weight:700;
+    color:var(--amber);text-transform:uppercase;margin-bottom:6px;
+  }
+  .title-input{
+    font-family:'Black Han Sans',sans-serif;
+    font-size:38px;line-height:1.05;letter-spacing:-.5px;
+    background:transparent;border:none;color:#fff;width:100%;
+    padding:0;margin:0 0 14px;outline:none;
+  }
+  .title-input::placeholder{color:rgba(255,255,255,.35);}
+
+  .meta{display:flex;flex-direction:column;gap:10px;position:relative;z-index:1;}
+  .meta-row{display:flex;align-items:center;gap:10px;}
+  .meta-ic{
+    width:30px;height:30px;flex:0 0 30px;border-radius:9px;
+    background:rgba(255,255,255,.1);display:grid;place-items:center;font-size:15px;
+  }
+  .meta input{
+    flex:1;background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.12);
+    border-radius:10px;padding:9px 12px;color:#fff;font-family:inherit;
+    font-size:15px;font-weight:600;outline:none;min-width:0;
+  }
+  .meta input::placeholder{color:rgba(255,255,255,.4);}
+  .meta input[type=date]{color-scheme:dark;}
+  .date-sep{color:rgba(255,255,255,.5);font-weight:700;}
+
+  /* ---------- COUNTDOWN ---------- */
+  .dday{
+    margin:-18px auto 0;position:relative;z-index:3;width:fit-content;
+    background:var(--amber);color:var(--pine-deep);
+    border-radius:16px;padding:8px 20px 10px;
+    box-shadow:0 8px 20px -8px rgba(214,135,27,.7);
+    display:flex;align-items:baseline;gap:8px;
+  }
+  .dday .num{font-family:'Black Han Sans',sans-serif;font-size:30px;line-height:1;}
+  .dday .lbl{font-size:12px;font-weight:800;letter-spacing:.5px;padding-bottom:2px;}
+
+  /* ---------- SECTION ---------- */
+  section{
+    background:var(--card);border:1px solid var(--line);border-radius:18px;
+    padding:18px 16px;margin-top:18px;
+  }
+  .sec-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+  .sec-no{
+    font-family:'Black Han Sans',sans-serif;font-size:15px;
+    color:#fff;background:var(--pine);width:26px;height:26px;border-radius:8px;
+    display:grid;place-items:center;flex:0 0 26px;
+  }
+  .sec-title{font-size:17px;font-weight:800;}
+  .sec-sub{font-size:12px;color:var(--muted);font-weight:600;margin-left:auto;}
+
+  /* ---------- TIME ---------- */
+  .time-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
+  .time-field{flex:1;}
+  .time-field label{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:5px;letter-spacing:.5px;}
+  .time-field input{
+    width:100%;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
+    padding:11px 12px;font-family:'Gothic A1';font-size:17px;font-weight:700;color:var(--pine-deep);
+    outline:none;
+  }
+  .time-arrow{color:var(--amber-deep);font-weight:900;font-size:18px;padding-top:18px;}
+  .timeline{position:relative;height:40px;margin-top:4px;}
+  .timeline .track{
+    position:absolute;top:14px;left:0;right:0;height:8px;border-radius:6px;background:#E4EAE2;
+  }
+  .timeline .fill{
+    position:absolute;top:14px;height:8px;border-radius:6px;
+    background:linear-gradient(90deg,var(--amber),var(--amber-deep));
+  }
+  .timeline .ticks{position:absolute;top:26px;left:0;right:0;display:flex;justify-content:space-between;}
+  .timeline .ticks span{font-size:10px;color:var(--muted);font-weight:600;}
+
+  /* ---------- CHECKLIST ---------- */
+  .progress-wrap{margin-bottom:14px;}
+  .progress-bar{height:8px;background:#E4EAE2;border-radius:6px;overflow:hidden;}
+  .progress-fill{height:100%;background:var(--check);border-radius:6px;transition:width .3s;width:0;}
+  .chips{display:flex;flex-wrap:wrap;gap:7px;margin-bottom:14px;}
+  .chip{
+    border:1px dashed var(--line);background:#F4F8F3;color:var(--pine);
+    border-radius:20px;padding:6px 12px;font-size:13px;font-weight:700;
+    cursor:pointer;font-family:inherit;transition:.15s;
+  }
+  .chip:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
+  .chip:disabled{opacity:.3;cursor:default;}
+  .chip::before{content:"+ ";}
+
+  .add-row{display:flex;gap:8px;margin-bottom:14px;}
+  .add-row input{
+    flex:1;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
+    padding:11px 13px;font-family:inherit;font-size:15px;font-weight:600;outline:none;min-width:0;
+  }
+  .add-row input:focus{border-color:var(--pine);}
+  .add-btn{
+    background:var(--pine);color:#fff;border:none;border-radius:11px;
+    padding:0 18px;font-family:inherit;font-size:15px;font-weight:800;cursor:pointer;
+  }
+  .list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;}
+  .item{
+    display:flex;align-items:center;gap:11px;
+    background:#F6FAF5;border:1px solid var(--line);border-radius:12px;padding:11px 12px;
+  }
+  .item.done{background:#EFF6EE;}
+  .box{
+    width:23px;height:23px;flex:0 0 23px;border-radius:7px;border:2px solid #C3D0C1;
+    display:grid;place-items:center;cursor:pointer;transition:.15s;background:#fff;
+  }
+  .box.on{background:var(--check);border-color:var(--check);}
+  .box svg{width:13px;height:13px;stroke:#fff;stroke-width:3.5;fill:none;opacity:0;}
+  .box.on svg{opacity:1;}
+  .item .name{flex:1;font-size:15px;font-weight:600;}
+  .item.done .name{text-decoration:line-through;color:var(--muted);}
+  .del{
+    background:none;border:none;color:#C3CDC2;font-size:20px;cursor:pointer;
+    padding:0 2px;line-height:1;font-weight:400;
+  }
+  .del:hover{color:#D9534F;}
+  .empty{text-align:center;color:var(--muted);font-size:13px;font-weight:600;padding:18px 0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="hero">
+    <div class="eyebrow">MT PLAN</div>
+    <input class="title-input" id="tripName" placeholder="우리 MT" maxlength="18">
+    <div class="meta">
+      <div class="meta-row">
+        <div class="meta-ic">📍</div>
+        <input id="place" placeholder="펜션 이름 / 장소">
+      </div>
+      <div class="meta-row">
+        <div class="meta-ic">📅</div>
+        <input type="date" id="startDate">
+        <span class="date-sep">→</span>
+        <input type="date" id="endDate">
+      </div>
+    </div>
+  </div>
+
+  <div class="dday" id="dday">
+    <span class="num" id="ddayNum">D-?</span>
+    <span class="lbl">출발까지</span>
+  </div>
+
+  <!-- 생활 시간 -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-no">1</div>
+      <div class="sec-title">생활 시간</div>
+      <div class="sec-sub" id="timeSummary"></div>
+    </div>
+    <div class="time-row">
+      <div class="time-field">
+        <label>시작</label>
+        <input type="time" id="startTime" value="14:00">
+      </div>
+      <div class="time-arrow">→</div>
+      <div class="time-field">
+        <label>종료</label>
+        <input type="time" id="endTime" value="02:00">
+      </div>
+    </div>
+    <div class="timeline">
+      <div class="track"></div>
+      <div class="fill" id="tlFill"></div>
+      <div class="ticks"><span>0시</span><span>6시</span><span>12시</span><span>18시</span><span>24시</span></div>
+    </div>
+  </section>
+
+  <!-- 준비물 -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-no">2</div>
+      <div class="sec-title">준비물 체크</div>
+      <div class="sec-sub" id="checkSummary">0 / 0</div>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
+    </div>
+    <div class="chips" id="chips"></div>
+    <div class="add-row">
+      <input id="itemInput" placeholder="준비물 직접 추가" maxlength="24">
+      <button class="add-btn" id="addBtn">추가</button>
+    </div>
+    <ul class="list" id="list"></ul>
+    <div class="empty" id="empty">아래 추천이나 직접 입력으로 준비물을 채워봐 🎒</div>
+  </section>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  const KEY = "mt-planner-v1";
+  const PRESETS = ["고기","쌈채소","쌈장","밥·햇반","라면","물·음료","술","종이컵·접시",
+    "숯·토치","물티슈","쓰레기봉투","블루투스 스피커","보드게임","담요","수건",
+    "세면도구","충전기·보조배터리","상비약","슬리퍼","트럼프카드"];
+
+  // ---- 안전한 저장소 (배포시 localStorage, 미지원시 메모리 폴백) ----
+  let mem = {};
+  const store = {
+    get(){ try{ return localStorage.getItem(KEY); }catch(e){ return mem[KEY]||null; } },
+    set(v){ try{ localStorage.setItem(KEY,v); }catch(e){ mem[KEY]=v; } }
+  };
+
+  const defaults = {
+    name:"", place:"", startDate:"", endDate:"",
+    startTime:"14:00", endTime:"02:00", items:[]
+  };
+  let state = Object.assign({}, defaults);
+  try{ const raw=store.get(); if(raw) state=Object.assign({}, defaults, JSON.parse(raw)); }catch(e){}
+
+  const $ = id => document.getElementById(id);
+  const save = () => store.set(JSON.stringify(state));
+
+  // ---- 헤더 바인딩 ----
+  const bind = (id, key, after) => {
+    const el = $(id); el.value = state[key] || el.value;
+    if(!state[key]) state[key] = el.value;
+    el.addEventListener("input", ()=>{ state[key]=el.value; save(); if(after) after(); });
+  };
+  bind("tripName","name");
+  bind("place","place");
+  bind("startDate","startDate", renderDday);
+  bind("endDate","endDate");
+  bind("startTime","startTime", renderTimeline);
+  bind("endTime","endTime", renderTimeline);
+
+  // ---- D-day ----
+  function renderDday(){
+    const box=$("dday"), num=$("ddayNum"), lbl=box.querySelector(".lbl");
+    if(!state.startDate){ num.textContent="D-?"; lbl.textContent="날짜를 정해줘"; return; }
+    const today=new Date(); today.setHours(0,0,0,0);
+    const d=new Date(state.startDate+"T00:00:00");
+    const diff=Math.round((d-today)/86400000);
+    if(diff>0){ num.textContent="D-"+diff; lbl.textContent="출발까지"; }
+    else if(diff===0){ num.textContent="D-DAY"; lbl.textContent="오늘 출발! 🚗"; }
+    else { num.textContent="D+"+(-diff); lbl.textContent="추억 완료 ✨"; }
+  }
+
+  // ---- 타임라인 ----
+  function toMin(t){ const [h,m]=t.split(":").map(Number); return h*60+m; }
+  function renderTimeline(){
+    const s=toMin(state.startTime), e=toMin(state.endTime);
+    const fill=$("tlFill"); const W=el=>el.parentElement.clientWidth;
+    const pct=v=>(v/1440*100);
+    // 종료가 시작보다 이르면 자정 넘김 → 두 구간이지만 단순히 시작~24시로 표시
+    let left=pct(s), width;
+    if(e>s){ width=pct(e-s); }
+    else { width=pct(1440-s); } // 새벽까지 이어지는 경우
+    fill.style.left=left+"%";
+    fill.style.width=width+"%";
+    const overnight = e<=s ? " (새벽까지)" : "";
+    $("timeSummary").textContent = state.startTime+" ~ "+state.endTime+overnight;
+  }
+
+  // ---- 준비물 ----
+  const list=$("list"), empty=$("empty");
+  function renderChips(){
+    const c=$("chips"); c.innerHTML="";
+    const have=new Set(state.items.map(i=>i.name));
+    PRESETS.forEach(name=>{
+      const b=document.createElement("button");
+      b.className="chip"; b.textContent=name;
+      if(have.has(name)) b.disabled=true;
+      b.onclick=()=>{ addItem(name); };
+      c.appendChild(b);
+    });
+  }
+  function renderList(){
+    list.innerHTML="";
+    empty.style.display = state.items.length? "none":"block";
+    state.items.forEach((it,idx)=>{
+      const li=document.createElement("li");
+      li.className="item"+(it.done?" done":"");
+      li.innerHTML=
+        '<div class="box'+(it.done?" on":"")+'"><svg viewBox="0 0 24 24"><polyline points="4,12 10,18 20,6"/></svg></div>'+
+        '<span class="name"></span>'+
+        '<button class="del" aria-label="삭제">×</button>';
+      li.querySelector(".name").textContent=it.name;
+      li.querySelector(".box").onclick=()=>{ it.done=!it.done; save(); renderList(); renderProgress(); };
+      li.querySelector(".del").onclick=()=>{ state.items.splice(idx,1); save(); renderAll(); };
+      list.appendChild(li);
+    });
+  }
+  function renderProgress(){
+    const total=state.items.length;
+    const done=state.items.filter(i=>i.done).length;
+    $("checkSummary").textContent=done+" / "+total;
+    $("progFill").style.width=(total? (done/total*100):0)+"%";
+  }
+  function addItem(name){
+    name=(name||"").trim(); if(!name) return;
+    if(state.items.some(i=>i.name===name)) return;
+    state.items.push({name,done:false}); save(); renderAll();
+  }
+  $("addBtn").onclick=()=>{ addItem($("itemInput").value); $("itemInput").value=""; $("itemInput").focus(); };
+  $("itemInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addItem(e.target.value); e.target.value=""; }});
+
+  function renderAll(){ renderChips(); renderList(); renderProgress(); }
+
+  // ---- 초기 렌더 ----
+  renderDday(); renderTimeline(); renderAll();
+})();
+</script>
+</body>
+</html>
