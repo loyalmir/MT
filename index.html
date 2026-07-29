@@ -392,7 +392,7 @@
       tag.className="tag"+(it.done?" done":"");
       tag.innerHTML='<span class="tag-label"></span><span class="tag-x" aria-label="삭제">×</span>';
       tag.querySelector(".tag-label").textContent=it.name;
-      tag.querySelector(".tag-label").onclick=()=>{ it.done=!it.done; save(); renderTags(); renderProgress(); };
+      tag.querySelector(".tag-label").onclick=()=>{ if(it.done && !confirm(it.name+" 체크를 해제할까요?")) return; it.done=!it.done; save(); renderTags(); renderProgress(); };
       tag.querySelector(".tag-x").onclick=(e)=>{ e.stopPropagation(); if(!confirm(it.name+" 삭제할까요?")) return; state.items.splice(idx,1); save(); renderAll(); };
       box.appendChild(tag);
     });
