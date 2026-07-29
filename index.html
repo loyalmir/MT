@@ -99,17 +99,17 @@
   .sec-sub{font-size:12px;color:var(--muted);font-weight:600;margin-left:auto;}
 
   /* ---------- TIME ---------- */
-  .time-row{display:flex;align-items:flex-end;gap:10px;margin-bottom:18px;}
-  .time-field{flex:1;min-width:0;}
+  .time-row{display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;}
+  .time-field{flex:0 0 auto;min-width:0;}
   .time-field label{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px;letter-spacing:.5px;}
   .time-field input{
-    width:100%;height:46px;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
-    padding:0 6px;font-family:'Gothic A1';font-size:14px;font-weight:700;color:var(--pine-deep);
+    height:44px;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
+    padding:0 14px;font-family:'Gothic A1';font-size:15px;font-weight:700;color:var(--pine-deep);
     outline:none;text-align:center;
   }
   /* iOS/아이패드 native 타임픽커 값 가운데 정렬 (박스 밖으로 나가는 것 방지) */
   .time-field input::-webkit-date-and-time-value{text-align:center;margin:0;}
-  .time-arrow{flex:0 0 18px;width:18px;height:46px;display:flex;align-items:center;justify-content:center;
+  .time-arrow{flex:0 0 auto;height:44px;display:flex;align-items:center;
     color:var(--amber-deep);font-weight:900;font-size:15px;}
   /* 여행 전체(날짜+시간) 시간표 */
   .timeline{margin-top:2px;}
@@ -133,6 +133,16 @@
   .chip:hover{background:var(--pine);color:#fff;border-color:var(--pine);}
   .chip:disabled{opacity:.3;cursor:default;}
   .chip::before{content:"+ ";}
+
+  /* 담은 준비물 (눌러서 체크) */
+  .tags{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;}
+  .tag{display:inline-flex;align-items:center;gap:7px;border-radius:20px;padding:8px 10px 8px 13px;
+    background:var(--pine);color:#fff;font-size:14px;font-weight:700;cursor:pointer;transition:.15s;}
+  .tag.done{background:#E4EAE2;color:var(--muted);}
+  .tag.done .tag-label{text-decoration:line-through;}
+  .tag-label{line-height:1;}
+  .tag-x{font-size:16px;line-height:1;opacity:.65;font-weight:400;padding:0 1px;}
+  .tag-x:hover{opacity:1;}
 
   .add-row{display:flex;gap:8px;margin-bottom:14px;}
   .add-row input{
@@ -244,12 +254,12 @@
       <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
     </div>
     <div class="chips" id="chips"></div>
+    <div class="tags" id="tags"></div>
     <div class="add-row">
       <input id="itemInput" placeholder="공동 준비물 직접 추가" maxlength="24">
       <button class="add-btn" id="addBtn">추가</button>
     </div>
-    <ul class="list" id="list"></ul>
-    <div class="empty" id="empty">고기·숯·스피커처럼 다 같이 쓸 짐을 담아봐 🎒</div>
+    <div class="empty" id="empty">위 추천을 누르면 아래에 담기고, 담은 걸 누르면 체크돼 ✅</div>
   </section>
 
   <!-- 개인 준비물 -->
@@ -356,33 +366,29 @@
     sum.textContent = span + (hours>0 ? " · 총 "+hours+"시간" : "");
   }
 
-  // ---- 준비물 ----
-  const list=$("list"), empty=$("empty");
+  // ---- 공동 준비물 ----
+  const empty=$("empty");
   function renderChips(){
     const c=$("chips"); c.innerHTML="";
     const have=new Set(state.items.map(i=>i.name));
-    PRESETS.forEach(name=>{
+    PRESETS.filter(n=>!have.has(n)).forEach(name=>{
       const b=document.createElement("button");
       b.className="chip"; b.textContent=name;
-      if(have.has(name)) b.disabled=true;
       b.onclick=()=>{ addItem(name); };
       c.appendChild(b);
     });
   }
-  function renderList(){
-    list.innerHTML="";
-    empty.style.display = state.items.length? "none":"block";
+  function renderTags(){
+    const box=$("tags"); box.innerHTML="";
+    empty.style.display = state.items.length ? "none":"block";
     state.items.forEach((it,idx)=>{
-      const li=document.createElement("li");
-      li.className="item"+(it.done?" done":"");
-      li.innerHTML=
-        '<div class="box'+(it.done?" on":"")+'"><svg viewBox="0 0 24 24"><polyline points="4,12 10,18 20,6"/></svg></div>'+
-        '<span class="name"></span>'+
-        '<button class="del" aria-label="삭제">×</button>';
-      li.querySelector(".name").textContent=it.name;
-      li.querySelector(".box").onclick=()=>{ it.done=!it.done; save(); renderList(); renderProgress(); };
-      li.querySelector(".del").onclick=()=>{ state.items.splice(idx,1); save(); renderAll(); };
-      list.appendChild(li);
+      const tag=document.createElement("div");
+      tag.className="tag"+(it.done?" done":"");
+      tag.innerHTML='<span class="tag-label"></span><span class="tag-x" aria-label="삭제">×</span>';
+      tag.querySelector(".tag-label").textContent=it.name;
+      tag.querySelector(".tag-label").onclick=()=>{ it.done=!it.done; save(); renderTags(); renderProgress(); };
+      tag.querySelector(".tag-x").onclick=(e)=>{ e.stopPropagation(); state.items.splice(idx,1); save(); renderAll(); };
+      box.appendChild(tag);
     });
   }
   function renderProgress(){
@@ -400,28 +406,40 @@
   $("itemInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addItem(e.target.value); e.target.value=""; }});
 
   // ---- 개인 준비물 ----
+  const openPeople = new Set();
   function renderPeople(){
     const wrap=$("people"); wrap.innerHTML="";
     $("peopleEmpty").style.display = state.people.length ? "none":"block";
     $("peopleSummary").textContent = state.people.length ? state.people.length+"명" : "";
     state.people.forEach(p=>{
       const t=p.items.length, d=p.items.filter(i=>i.done).length;
-      const card=document.createElement("div"); card.className="person";
+      const card=document.createElement("div");
+      card.className="person"+(openPeople.has(p.id)?" open":"");
       card.innerHTML=
         '<div class="person-head">'+
           '<div class="avatar"></div>'+
           '<div class="person-name"></div>'+
           '<div class="person-prog">'+d+' / '+t+'</div>'+
           '<button class="person-del" aria-label="참가자 삭제">×</button>'+
+          '<span class="chev">▾</span>'+
         '</div>'+
-        '<ul class="list"></ul>'+
-        '<div class="add-row">'+
-          '<input class="p-input" placeholder="준비물 추가" maxlength="20">'+
-          '<button class="add-btn p-add">추가</button>'+
+        '<div class="person-body">'+
+          '<ul class="list"></ul>'+
+          '<div class="add-row">'+
+            '<input class="p-input" placeholder="준비물 추가" maxlength="20">'+
+            '<button class="add-btn p-add">추가</button>'+
+          '</div>'+
         '</div>';
       card.querySelector(".avatar").textContent = p.name.slice(0,1);
       card.querySelector(".person-name").textContent = p.name;
-      card.querySelector(".person-del").onclick=()=>{
+      card.querySelector(".person-head").onclick=(e)=>{
+        if(e.target.closest(".person-del")) return;
+        if(openPeople.has(p.id)) openPeople.delete(p.id); else openPeople.add(p.id);
+        card.classList.toggle("open");
+      };
+      card.querySelector(".person-del").onclick=(e)=>{
+        e.stopPropagation();
+        openPeople.delete(p.id);
         state.people=state.people.filter(x=>x.id!==p.id); save(); renderPeople();
       };
       const ul=card.querySelector(".list");
@@ -450,7 +468,7 @@
   $("personBtn").onclick=()=>{ addPerson($("personInput").value); $("personInput").value=""; $("personInput").focus(); };
   $("personInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addPerson(e.target.value); e.target.value=""; }});
 
-  function renderAll(){ renderChips(); renderList(); renderProgress(); renderPeople(); }
+  function renderAll(){ renderChips(); renderTags(); renderProgress(); renderPeople(); }
 
   // ---- 초기 렌더 ----
   renderDday(); renderTimeline(); renderAll();
