@@ -99,25 +99,23 @@
   .sec-sub{font-size:12px;color:var(--muted);font-weight:600;margin-left:auto;}
 
   /* ---------- TIME ---------- */
-  .time-row{display:flex;align-items:center;gap:12px;margin-bottom:16px;}
-  .time-field{flex:1;}
-  .time-field label{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:5px;letter-spacing:.5px;}
+  .time-row{display:flex;align-items:flex-end;gap:10px;margin-bottom:18px;}
+  .time-field{flex:1;min-width:0;}
+  .time-field label{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px;letter-spacing:.5px;}
   .time-field input{
-    width:100%;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
-    padding:11px 12px;font-family:'Gothic A1';font-size:17px;font-weight:700;color:var(--pine-deep);
-    outline:none;
+    width:100%;height:48px;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
+    padding:0 10px;font-family:'Gothic A1';font-size:15px;font-weight:700;color:var(--pine-deep);
+    outline:none;text-align:center;
   }
-  .time-arrow{color:var(--amber-deep);font-weight:900;font-size:18px;padding-top:18px;}
-  .timeline{position:relative;height:40px;margin-top:4px;}
-  .timeline .track{
-    position:absolute;top:14px;left:0;right:0;height:8px;border-radius:6px;background:#E4EAE2;
-  }
-  .timeline .fill{
-    position:absolute;top:14px;height:8px;border-radius:6px;
-    background:linear-gradient(90deg,var(--amber),var(--amber-deep));
-  }
-  .timeline .ticks{position:absolute;top:26px;left:0;right:0;display:flex;justify-content:space-between;}
-  .timeline .ticks span{font-size:10px;color:var(--muted);font-weight:600;}
+  .time-arrow{height:48px;display:flex;align-items:center;color:var(--amber-deep);font-weight:900;font-size:16px;}
+  /* 여행 전체(날짜+시간) 시간표 */
+  .timeline{margin-top:2px;}
+  .tl-days{display:flex;gap:5px;}
+  .tl-day{flex:1;min-width:0;}
+  .tl-bar{position:relative;height:12px;border-radius:6px;background:#E4EAE2;overflow:hidden;}
+  .tl-bar .seg{position:absolute;top:0;bottom:0;border-radius:6px;background:linear-gradient(90deg,var(--amber),var(--amber-deep));}
+  .tl-label{margin-top:7px;text-align:center;font-size:11px;color:var(--muted);font-weight:700;}
+  .tl-empty{text-align:center;font-size:12px;color:var(--muted);font-weight:600;padding:8px 0;}
 
   /* ---------- CHECKLIST ---------- */
   .progress-wrap{margin-bottom:14px;}
@@ -164,6 +162,22 @@
   }
   .del:hover{color:#D9534F;}
   .empty{text-align:center;color:var(--muted);font-size:13px;font-weight:600;padding:18px 0;}
+
+  /* ---------- 개인 준비물 ---------- */
+  .person{border:1px solid var(--line);border-radius:14px;padding:13px;margin-bottom:12px;background:#F8FBF7;}
+  .person-head{display:flex;align-items:center;gap:9px;margin-bottom:11px;}
+  .avatar{width:30px;height:30px;flex:0 0 30px;border-radius:50%;background:var(--pine);color:#fff;
+    display:grid;place-items:center;font-weight:800;font-size:14px;}
+  .person-name{font-size:16px;font-weight:800;}
+  .person-prog{margin-left:auto;font-size:12px;font-weight:800;color:var(--check);}
+  .person-del{background:none;border:none;color:#C3CDC2;font-size:20px;cursor:pointer;padding:0 2px;line-height:1;}
+  .person-del:hover{color:#D9534F;}
+  .person .list{margin-bottom:0;}
+  .person .item{background:#fff;}
+  .person .item.done{background:#EFF6EE;}
+  .person .add-row{margin:10px 0 0;}
+  .person .add-row input{background:#fff;}
+  .person-empty{text-align:center;font-size:12px;color:var(--muted);font-weight:600;padding:8px 0;}
 </style>
 </head>
 <body>
@@ -209,18 +223,14 @@
         <input type="time" id="endTime" value="02:00">
       </div>
     </div>
-    <div class="timeline">
-      <div class="track"></div>
-      <div class="fill" id="tlFill"></div>
-      <div class="ticks"><span>0시</span><span>6시</span><span>12시</span><span>18시</span><span>24시</span></div>
-    </div>
+    <div class="timeline" id="timeline"></div>
   </section>
 
-  <!-- 준비물 -->
+  <!-- 공동 준비물 -->
   <section>
     <div class="sec-head">
       <div class="sec-no">2</div>
-      <div class="sec-title">준비물 체크</div>
+      <div class="sec-title">공동 준비물</div>
       <div class="sec-sub" id="checkSummary">0 / 0</div>
     </div>
     <div class="progress-wrap">
@@ -228,11 +238,26 @@
     </div>
     <div class="chips" id="chips"></div>
     <div class="add-row">
-      <input id="itemInput" placeholder="준비물 직접 추가" maxlength="24">
+      <input id="itemInput" placeholder="공동 준비물 직접 추가" maxlength="24">
       <button class="add-btn" id="addBtn">추가</button>
     </div>
     <ul class="list" id="list"></ul>
-    <div class="empty" id="empty">아래 추천이나 직접 입력으로 준비물을 채워봐 🎒</div>
+    <div class="empty" id="empty">고기·숯·스피커처럼 다 같이 쓸 짐을 담아봐 🎒</div>
+  </section>
+
+  <!-- 개인 준비물 -->
+  <section>
+    <div class="sec-head">
+      <div class="sec-no">3</div>
+      <div class="sec-title">개인 준비물</div>
+      <div class="sec-sub" id="peopleSummary"></div>
+    </div>
+    <div class="add-row">
+      <input id="personInput" placeholder="참가자 이름 추가" maxlength="10">
+      <button class="add-btn" id="personBtn">추가</button>
+    </div>
+    <div id="people"></div>
+    <div class="person-empty" id="peopleEmpty">참가자를 추가하면 기본 준비물이 세팅되고, 각자 챙긴 걸 체크할 수 있어 🧍</div>
   </section>
 
 </div>
@@ -252,9 +277,12 @@
     set(v){ try{ localStorage.setItem(KEY,v); }catch(e){ mem[KEY]=v; } }
   };
 
+  const PERSONAL = ["칫솔·치약","속옷·양말","세면도구","충전기","개인 상비약","편한 옷·잠옷"];
+  const uid = () => Math.random().toString(36).slice(2,8);
+
   const defaults = {
     name:"", place:"", startDate:"", endDate:"",
-    startTime:"14:00", endTime:"02:00", items:[]
+    startTime:"15:00", endTime:"11:00", items:[], people:[]
   };
   let state = Object.assign({}, defaults);
   try{ const raw=store.get(); if(raw) state=Object.assign({}, defaults, JSON.parse(raw)); }catch(e){}
@@ -270,8 +298,8 @@
   };
   bind("tripName","name");
   bind("place","place");
-  bind("startDate","startDate", renderDday);
-  bind("endDate","endDate");
+  bind("startDate","startDate", ()=>{ renderDday(); renderTimeline(); });
+  bind("endDate","endDate", renderTimeline);
   bind("startTime","startTime", renderTimeline);
   bind("endTime","endTime", renderTimeline);
 
@@ -287,20 +315,38 @@
     else { num.textContent="D+"+(-diff); lbl.textContent="추억 완료 ✨"; }
   }
 
-  // ---- 타임라인 ----
+  // ---- 여행 시간표 (날짜 + 시간 연동) ----
+  const WD=["일","월","화","수","목","금","토"];
   function toMin(t){ const [h,m]=t.split(":").map(Number); return h*60+m; }
+  function dateList(){
+    if(!state.startDate) return [];
+    const end=state.endDate||state.startDate;
+    const s=new Date(state.startDate+"T00:00:00"), e=new Date(end+"T00:00:00");
+    if(e<s) return [new Date(s)];
+    const arr=[]; for(let d=new Date(s); d<=e; d.setDate(d.getDate()+1)) arr.push(new Date(d));
+    return arr;
+  }
   function renderTimeline(){
-    const s=toMin(state.startTime), e=toMin(state.endTime);
-    const fill=$("tlFill"); const W=el=>el.parentElement.clientWidth;
-    const pct=v=>(v/1440*100);
-    // 종료가 시작보다 이르면 자정 넘김 → 두 구간이지만 단순히 시작~24시로 표시
-    let left=pct(s), width;
-    if(e>s){ width=pct(e-s); }
-    else { width=pct(1440-s); } // 새벽까지 이어지는 경우
-    fill.style.left=left+"%";
-    fill.style.width=width+"%";
-    const overnight = e<=s ? " (새벽까지)" : "";
-    $("timeSummary").textContent = state.startTime+" ~ "+state.endTime+overnight;
+    const el=$("timeline"), sum=$("timeSummary"), days=dateList();
+    if(!days.length){ el.innerHTML='<div class="tl-empty">위에 날짜를 정하면 여행 시간표가 그려져</div>'; sum.textContent=""; return; }
+    const sMin=toMin(state.startTime), eMin=toMin(state.endTime);
+    let html='<div class="tl-days">';
+    days.forEach((d,i)=>{
+      let from = i===0 ? sMin : 0;
+      let to   = i===days.length-1 ? eMin : 1440;
+      if(days.length===1){ from=sMin; to=(eMin>sMin?eMin:1440); }
+      const left=Math.max(0,from)/1440*100, width=Math.max(0,to-from)/1440*100;
+      html+='<div class="tl-day"><div class="tl-bar">'+
+            (width>0?'<div class="seg" style="left:'+left+'%;width:'+width+'%"></div>':'')+
+            '</div><div class="tl-label">'+(d.getMonth()+1)+'/'+d.getDate()+' ('+WD[d.getDay()]+')</div></div>';
+    });
+    html+='</div>'; el.innerHTML=html;
+    const nights=days.length-1;
+    const startDT=new Date(state.startDate+"T"+state.startTime);
+    const endDT=new Date((state.endDate||state.startDate)+"T"+state.endTime);
+    const hours=Math.round((endDT-startDT)/3600000);
+    const span = nights>0 ? (nights+"박 "+days.length+"일") : "당일";
+    sum.textContent = span + (hours>0 ? " · 총 "+hours+"시간" : "");
   }
 
   // ---- 준비물 ----
@@ -346,7 +392,58 @@
   $("addBtn").onclick=()=>{ addItem($("itemInput").value); $("itemInput").value=""; $("itemInput").focus(); };
   $("itemInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addItem(e.target.value); e.target.value=""; }});
 
-  function renderAll(){ renderChips(); renderList(); renderProgress(); }
+  // ---- 개인 준비물 ----
+  function renderPeople(){
+    const wrap=$("people"); wrap.innerHTML="";
+    $("peopleEmpty").style.display = state.people.length ? "none":"block";
+    $("peopleSummary").textContent = state.people.length ? state.people.length+"명" : "";
+    state.people.forEach(p=>{
+      const t=p.items.length, d=p.items.filter(i=>i.done).length;
+      const card=document.createElement("div"); card.className="person";
+      card.innerHTML=
+        '<div class="person-head">'+
+          '<div class="avatar"></div>'+
+          '<div class="person-name"></div>'+
+          '<div class="person-prog">'+d+' / '+t+'</div>'+
+          '<button class="person-del" aria-label="참가자 삭제">×</button>'+
+        '</div>'+
+        '<ul class="list"></ul>'+
+        '<div class="add-row">'+
+          '<input class="p-input" placeholder="준비물 추가" maxlength="20">'+
+          '<button class="add-btn p-add">추가</button>'+
+        '</div>';
+      card.querySelector(".avatar").textContent = p.name.slice(0,1);
+      card.querySelector(".person-name").textContent = p.name;
+      card.querySelector(".person-del").onclick=()=>{
+        state.people=state.people.filter(x=>x.id!==p.id); save(); renderPeople();
+      };
+      const ul=card.querySelector(".list");
+      p.items.forEach((it,idx)=>{
+        const li=document.createElement("li");
+        li.className="item"+(it.done?" done":"");
+        li.innerHTML='<div class="box'+(it.done?" on":"")+'"><svg viewBox="0 0 24 24"><polyline points="4,12 10,18 20,6"/></svg></div>'+
+          '<span class="name"></span><button class="del" aria-label="삭제">×</button>';
+        li.querySelector(".name").textContent=it.name;
+        li.querySelector(".box").onclick=()=>{ it.done=!it.done; save(); renderPeople(); };
+        li.querySelector(".del").onclick=()=>{ p.items.splice(idx,1); save(); renderPeople(); };
+        ul.appendChild(li);
+      });
+      const inp=card.querySelector(".p-input");
+      const addP=()=>{ const v=inp.value.trim(); if(v && !p.items.some(i=>i.name===v)){ p.items.push({name:v,done:false}); save(); renderPeople(); } };
+      card.querySelector(".p-add").onclick=addP;
+      inp.addEventListener("keydown",e=>{ if(e.key==="Enter") addP(); });
+      wrap.appendChild(card);
+    });
+  }
+  function addPerson(name){
+    name=(name||"").trim(); if(!name) return;
+    state.people.push({id:uid(), name:name, items:PERSONAL.map(n=>({name:n,done:false}))});
+    save(); renderPeople();
+  }
+  $("personBtn").onclick=()=>{ addPerson($("personInput").value); $("personInput").value=""; $("personInput").focus(); };
+  $("personInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addPerson(e.target.value); e.target.value=""; }});
+
+  function renderAll(){ renderChips(); renderList(); renderProgress(); renderPeople(); }
 
   // ---- 초기 렌더 ----
   renderDday(); renderTimeline(); renderAll();
