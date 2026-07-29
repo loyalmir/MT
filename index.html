@@ -104,9 +104,9 @@
   .time-field{flex:1 1 0;min-width:0;}
   .time-field label{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px;letter-spacing:.5px;}
   .time-field input{
-    width:100%;height:46px;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
-    padding:0 8px;font-family:'Gothic A1';font-size:16px;font-weight:700;color:var(--pine-deep);
-    outline:none;text-align:center;
+    width:100%;min-width:0;height:46px;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
+    padding:0 6px;font-family:'Gothic A1';font-size:15px;font-weight:700;color:var(--pine-deep);
+    outline:none;text-align:center;box-sizing:border-box;
   }
   /* iOS/아이패드 native 타임픽커 값 가운데 정렬 (박스 밖으로 나가는 것 방지) */
   .time-field input::-webkit-date-and-time-value{text-align:center;margin:0;}
