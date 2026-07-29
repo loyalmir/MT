@@ -101,7 +101,7 @@
 
   /* ---------- TIME ---------- */
   .time-row{display:flex;align-items:flex-end;justify-content:space-evenly;margin-bottom:16px;}
-  .time-field{flex:1 1 0;min-width:0;max-width:150px;}
+  .time-field{flex:1 1 0;min-width:0;max-width:120px;}
   .time-field label{display:block;text-align:center;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px;letter-spacing:.5px;}
   .time-field input{
     width:100%;min-width:0;height:42px;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
@@ -393,7 +393,7 @@
       tag.innerHTML='<span class="tag-label"></span><span class="tag-x" aria-label="삭제">×</span>';
       tag.querySelector(".tag-label").textContent=it.name;
       tag.querySelector(".tag-label").onclick=()=>{ it.done=!it.done; save(); renderTags(); renderProgress(); };
-      tag.querySelector(".tag-x").onclick=(e)=>{ e.stopPropagation(); state.items.splice(idx,1); save(); renderAll(); };
+      tag.querySelector(".tag-x").onclick=(e)=>{ e.stopPropagation(); if(!confirm(it.name+" 삭제할까요?")) return; state.items.splice(idx,1); save(); renderAll(); };
       box.appendChild(tag);
     });
   }
@@ -457,7 +457,7 @@
           '<span class="name"></span><button class="del" aria-label="삭제">×</button>';
         li.querySelector(".name").textContent=it.name;
         li.querySelector(".box").onclick=()=>{ it.done=!it.done; save(); renderPeople(); };
-        li.querySelector(".del").onclick=()=>{ p.items.splice(idx,1); save(); renderPeople(); };
+        li.querySelector(".del").onclick=()=>{ if(!confirm(it.name+" 삭제할까요?")) return; p.items.splice(idx,1); save(); renderPeople(); };
         ul.appendChild(li);
       });
       const inp=card.querySelector(".p-input");
