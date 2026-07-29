@@ -50,6 +50,7 @@
     font-size:12px;letter-spacing:3px;font-weight:700;
     color:var(--amber);text-transform:uppercase;margin-bottom:6px;
   }
+  #syncBadge{letter-spacing:.3px;font-size:10px;font-weight:600;color:rgba(234,242,236,.55);text-transform:none;}
   .title-input{
     font-family:'Black Han Sans',sans-serif;
     font-size:38px;line-height:1.05;letter-spacing:-.5px;
@@ -100,16 +101,16 @@
 
   /* ---------- TIME ---------- */
   .time-row{display:flex;align-items:flex-end;gap:10px;margin-bottom:16px;}
-  .time-field{flex:0 0 auto;min-width:0;}
+  .time-field{flex:1 1 0;min-width:0;max-width:158px;}
   .time-field label{display:block;font-size:11px;color:var(--muted);font-weight:700;margin-bottom:6px;letter-spacing:.5px;}
   .time-field input{
-    height:44px;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
-    padding:0 14px;font-family:'Gothic A1';font-size:15px;font-weight:700;color:var(--pine-deep);
+    width:100%;height:46px;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
+    padding:0 8px;font-family:'Gothic A1';font-size:16px;font-weight:700;color:var(--pine-deep);
     outline:none;text-align:center;
   }
   /* iOS/아이패드 native 타임픽커 값 가운데 정렬 (박스 밖으로 나가는 것 방지) */
   .time-field input::-webkit-date-and-time-value{text-align:center;margin:0;}
-  .time-arrow{flex:0 0 auto;height:44px;display:flex;align-items:center;
+  .time-arrow{flex:0 0 auto;height:46px;display:flex;align-items:center;
     color:var(--amber-deep);font-weight:900;font-size:15px;}
   /* 여행 전체(날짜+시간) 시간표 */
   .timeline{margin-top:2px;}
@@ -201,7 +202,7 @@
 <div class="wrap">
 
   <div class="hero">
-    <div class="eyebrow">MT PLAN</div>
+    <div class="eyebrow">MT PLAN <span id="syncBadge"></span></div>
     <input class="title-input" id="tripName" placeholder="우리 MT" maxlength="18">
     <div class="meta">
       <div class="meta-row">
@@ -253,13 +254,12 @@
     <div class="progress-wrap">
       <div class="progress-bar"><div class="progress-fill" id="progFill"></div></div>
     </div>
-    <div class="chips" id="chips"></div>
-    <div class="tags" id="tags"></div>
     <div class="add-row">
-      <input id="itemInput" placeholder="공동 준비물 직접 추가" maxlength="24">
+      <input id="itemInput" placeholder="공동 준비물 입력 (예: 고기, 숯, 스피커)" maxlength="24">
       <button class="add-btn" id="addBtn">추가</button>
     </div>
-    <div class="empty" id="empty">위 추천을 누르면 아래에 담기고, 담은 걸 누르면 체크돼 ✅</div>
+    <div class="tags" id="tags"></div>
+    <div class="empty" id="empty">직접 추가하면 여기 담기고, 담은 걸 누르면 체크돼 ✅</div>
   </section>
 
   <!-- 개인 준비물 -->
@@ -283,11 +283,27 @@
 (function(){
   "use strict";
   const KEY = "mt-planner-v1";
-  const PRESETS = ["고기","쌈채소","쌈장","밥·햇반","라면","물·음료","술","종이컵·접시",
-    "숯·토치","물티슈","쓰레기봉투","블루투스 스피커","보드게임","담요","수건",
-    "세면도구","충전기·보조배터리","상비약","슬리퍼","트럼프카드"];
 
-  // ---- 안전한 저장소 (배포시 localStorage, 미지원시 메모리 폴백) ----
+  /* =========================================================
+     실시간 공유 설정 (Firebase 실시간 DB)
+     아래 값을 채우면 모든 참가자가 같은 화면을 실시간으로 공유해.
+     비워두면 이 기기에만 저장(localStorage)돼.
+       1) console.firebase.google.com 에서 프로젝트 생성
+       2) 웹앱(</>) 추가 → config 값 복사해서 아래에 붙여넣기 (databaseURL 필수)
+       3) 빌드 > Realtime Database 생성
+       4) 규칙(Rules)을 { "rules": { ".read": true, ".write": true } } 로
+     ========================================================= */
+  const firebaseConfig = {
+    apiKey: "",
+    authDomain: "",
+    databaseURL: "",   // 예: https://mt-xxxx-default-rtdb.firebaseio.com
+    projectId: "",
+    appId: ""
+  };
+  const ROOM = "main";                       // 모두가 함께 쓰는 방
+  const SYNC_ON = !!firebaseConfig.databaseURL;
+
+  // ---- 저장소 (localStorage, 미지원시 메모리 폴백) ----
   let mem = {};
   const store = {
     get(){ try{ return localStorage.getItem(KEY); }catch(e){ return mem[KEY]||null; } },
@@ -305,7 +321,8 @@
   try{ const raw=store.get(); if(raw) state=Object.assign({}, defaults, JSON.parse(raw)); }catch(e){}
 
   const $ = id => document.getElementById(id);
-  const save = () => store.set(JSON.stringify(state));
+  let applyingRemote=false, pushRemote=()=>{};
+  function save(){ store.set(JSON.stringify(state)); if(!applyingRemote) pushRemote(); }
 
   // ---- 헤더 바인딩 ----
   const bind = (id, key, after) => {
@@ -368,16 +385,6 @@
 
   // ---- 공동 준비물 ----
   const empty=$("empty");
-  function renderChips(){
-    const c=$("chips"); c.innerHTML="";
-    const have=new Set(state.items.map(i=>i.name));
-    PRESETS.filter(n=>!have.has(n)).forEach(name=>{
-      const b=document.createElement("button");
-      b.className="chip"; b.textContent=name;
-      b.onclick=()=>{ addItem(name); };
-      c.appendChild(b);
-    });
-  }
   function renderTags(){
     const box=$("tags"); box.innerHTML="";
     empty.style.display = state.items.length ? "none":"block";
@@ -439,6 +446,7 @@
       };
       card.querySelector(".person-del").onclick=(e)=>{
         e.stopPropagation();
+        if(!confirm(p.name+" 님을 삭제할까요? 준비물 목록도 같이 지워져요.")) return;
         openPeople.delete(p.id);
         state.people=state.people.filter(x=>x.id!==p.id); save(); renderPeople();
       };
@@ -468,10 +476,48 @@
   $("personBtn").onclick=()=>{ addPerson($("personInput").value); $("personInput").value=""; $("personInput").focus(); };
   $("personInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addPerson(e.target.value); e.target.value=""; }});
 
-  function renderAll(){ renderChips(); renderTags(); renderProgress(); renderPeople(); }
+  function renderAll(){ renderTags(); renderProgress(); renderPeople(); }
+
+  // ---- 헤더 입력값 반영 (입력 중인 칸은 건드리지 않음) ----
+  const HEADER=[["tripName","name"],["place","place"],["startDate","startDate"],["endDate","endDate"],["startTime","startTime"],["endTime","endTime"]];
+  function syncInputs(){
+    HEADER.forEach(([id,key])=>{ const el=$(id); if(el && document.activeElement!==el) el.value = state[key]||""; });
+  }
+  function renderAllFull(){ syncInputs(); renderDday(); renderTimeline(); renderAll(); }
 
   // ---- 초기 렌더 ----
-  renderDday(); renderTimeline(); renderAll();
+  renderAllFull();
+
+  // ---- 실시간 공유 (Firebase 실시간 DB) ----
+  function setBadge(t){ const b=$("syncBadge"); if(b) b.textContent=t; }
+  setBadge(SYNC_ON ? "· 공유 연결 중…" : "· 이 기기에 저장");
+  (async function initSync(){
+    if(!SYNC_ON) return;
+    try{
+      const [{ initializeApp }, { getDatabase, ref, onValue, set:fbSet }] = await Promise.all([
+        import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"),
+        import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js")
+      ]);
+      const db = getDatabase(initializeApp(firebaseConfig));
+      const dbRef = ref(db, "rooms/"+ROOM);
+      let timer=null;
+      pushRemote = ()=>{ clearTimeout(timer); timer=setTimeout(()=>{ fbSet(dbRef, state).catch(()=>{}); }, 250); };
+      let first=true;
+      onValue(dbRef, (snap)=>{
+        const val=snap.val();
+        if(!val){ if(first){ first=false; pushRemote(); } return; }  // 방이 비어있으면 내 데이터로 초기화
+        first=false;
+        applyingRemote=true;
+        state=Object.assign({}, defaults, val);
+        if(!Array.isArray(state.items)) state.items=[];
+        if(!Array.isArray(state.people)) state.people=[];
+        store.set(JSON.stringify(state));
+        renderAllFull();
+        applyingRemote=false;
+      });
+      setBadge("· 실시간 공유 중");
+    }catch(e){ setBadge("· 이 기기에 저장 (공유 연결 실패)"); }
+  })();
 })();
 </script>
 </body>
