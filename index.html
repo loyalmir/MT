@@ -145,6 +145,17 @@
   .tag-x{font-size:16px;line-height:1;opacity:.65;font-weight:400;padding:0 1px;}
   .tag-x:hover{opacity:1;}
 
+  /* 카테고리 + 드래그 */
+  #tags{display:block;}
+  .cat-block{margin-bottom:14px;}
+  .cat-head{display:flex;align-items:center;gap:8px;margin:2px 0 8px;}
+  .cat-name{font-size:13px;font-weight:800;color:var(--pine);}
+  .cat-del{background:none;border:none;color:#C3CDC2;font-size:16px;line-height:1;cursor:pointer;padding:0 2px;}
+  .cat-del:hover{color:#D9534F;}
+  .cat-list{margin-bottom:0;min-height:38px;padding:3px;border-radius:10px;}
+  .cat-list:empty::after{content:"여기로 끌어다 놓기";display:block;text-align:center;color:#B4C0B6;font-size:12px;font-weight:600;padding:9px;}
+  .tag-ghost{opacity:.35;}
+
   .add-row{display:flex;gap:8px;margin-bottom:14px;}
   .add-row input{
     flex:1;background:#F1F5F0;border:1px solid var(--line);border-radius:11px;
@@ -257,8 +268,12 @@
       <input id="itemInput" placeholder="공동 준비물 입력 (예: 고기, 숯, 스피커)" maxlength="24">
       <button class="add-btn" id="addBtn">추가</button>
     </div>
-    <div class="tags" id="tags"></div>
-    <div class="empty" id="empty">직접 추가하면 여기 담기고, 담은 걸 누르면 체크돼 ✅</div>
+    <div class="add-row">
+      <input id="catInput" placeholder="분류 추가 (예: 식재료, 도구, 간식)" maxlength="16">
+      <button class="add-btn" id="catBtn">분류</button>
+    </div>
+    <div id="tags"></div>
+    <div class="empty" id="empty">직접 추가하면 여기 담기고, 눌러서 체크·꾹 눌러 드래그로 정렬돼 ✅</div>
   </section>
 
   <!-- 개인 준비물 -->
@@ -278,6 +293,7 @@
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.15.2/Sortable.min.js"></script>
 <script>
 (function(){
   "use strict";
@@ -314,7 +330,7 @@
 
   const defaults = {
     name:"", place:"", startDate:"", endDate:"",
-    startTime:"15:00", endTime:"11:00", items:[], people:[]
+    startTime:"15:00", endTime:"11:00", items:[], people:[], cats:[]
   };
   let state = Object.assign({}, defaults);
   try{ const raw=store.get(); if(raw) state=Object.assign({}, defaults, JSON.parse(raw)); }catch(e){}
@@ -382,34 +398,74 @@
     sum.textContent = span + (hours>0 ? " · 총 "+hours+"시간" : "");
   }
 
-  // ---- 공동 준비물 ----
+  // ---- 공동 준비물 (카테고리 + 드래그 정렬) ----
   const empty=$("empty");
+  function makeTag(it){
+    const tag=document.createElement("div");
+    tag.className="tag"+(it.done?" done":"");
+    tag.dataset.name=it.name;
+    tag.innerHTML='<span class="tag-label"></span><span class="tag-x" aria-label="삭제">×</span>';
+    tag.querySelector(".tag-label").textContent=it.name;
+    tag.querySelector(".tag-label").onclick=()=>{ if(it.done && !confirm(it.name+" 체크를 해제할까요?")) return; it.done=!it.done; save(); renderTags(); renderProgress(); };
+    tag.querySelector(".tag-x").onclick=(e)=>{ e.stopPropagation(); if(!confirm(it.name+" 삭제할까요?")) return; const i=state.items.indexOf(it); if(i>-1) state.items.splice(i,1); save(); renderAll(); };
+    return tag;
+  }
+  function syncOrder(){
+    const lists=$("tags").querySelectorAll(".cat-list"), seen=new Set(), next=[];
+    lists.forEach(list=>{
+      const cat=list.dataset.cat||"";
+      list.querySelectorAll(".tag").forEach(el=>{
+        const it=state.items.find(x=>x.name===el.dataset.name);
+        if(it && !seen.has(it)){ it.cat=cat; next.push(it); seen.add(it); }
+      });
+    });
+    state.items.forEach(it=>{ if(!seen.has(it)) next.push(it); });
+    state.items=next; save(); setTimeout(renderTags,0);
+  }
   function renderTags(){
     const box=$("tags"); box.innerHTML="";
     empty.style.display = state.items.length ? "none":"block";
-    state.items.forEach((it,idx)=>{
-      const tag=document.createElement("div");
-      tag.className="tag"+(it.done?" done":"");
-      tag.innerHTML='<span class="tag-label"></span><span class="tag-x" aria-label="삭제">×</span>';
-      tag.querySelector(".tag-label").textContent=it.name;
-      tag.querySelector(".tag-label").onclick=()=>{ if(it.done && !confirm(it.name+" 체크를 해제할까요?")) return; it.done=!it.done; save(); renderTags(); renderProgress(); };
-      tag.querySelector(".tag-x").onclick=(e)=>{ e.stopPropagation(); if(!confirm(it.name+" 삭제할까요?")) return; state.items.splice(idx,1); save(); renderAll(); };
-      box.appendChild(tag);
+    const cats=state.cats||[];
+    const buckets=[{key:"",label:"미분류"}].concat(cats.map(c=>({key:c,label:c})));
+    buckets.forEach(b=>{
+      const items=state.items.filter(it=>(it.cat||"")===b.key);
+      if(b.key==="" && items.length===0 && cats.length>0) return;
+      const block=document.createElement("div"); block.className="cat-block";
+      const head=document.createElement("div"); head.className="cat-head";
+      const nm=document.createElement("span"); nm.className="cat-name"; nm.textContent=b.label+" ("+items.length+")";
+      head.appendChild(nm);
+      if(b.key!==""){
+        const del=document.createElement("button"); del.className="cat-del"; del.textContent="×"; del.setAttribute("aria-label","분류 삭제");
+        del.onclick=()=>{ if(!confirm("'"+b.key+"' 분류를 지울까요? 물건은 미분류로 옮겨져요.")) return; state.items.forEach(it=>{ if((it.cat||"")===b.key) it.cat=""; }); state.cats=cats.filter(c=>c!==b.key); save(); renderTags(); };
+        head.appendChild(del);
+      }
+      block.appendChild(head);
+      const list=document.createElement("div"); list.className="tags cat-list"; list.dataset.cat=b.key;
+      items.forEach(it=>list.appendChild(makeTag(it)));
+      block.appendChild(list); box.appendChild(block);
+      if(window.Sortable){ Sortable.create(list,{group:"common",animation:150,delay:180,delayOnTouchOnly:true,ghostClass:"tag-ghost",onEnd:syncOrder}); }
     });
   }
   function renderProgress(){
-    const total=state.items.length;
-    const done=state.items.filter(i=>i.done).length;
+    const total=state.items.length, done=state.items.filter(i=>i.done).length;
     $("checkSummary").textContent=done+" / "+total;
     $("progFill").style.width=(total? (done/total*100):0)+"%";
   }
   function addItem(name){
     name=(name||"").trim(); if(!name) return;
     if(state.items.some(i=>i.name===name)) return;
-    state.items.push({name,done:false}); save(); renderAll();
+    state.items.push({name,done:false,cat:""}); save(); renderAll();
+  }
+  function addCategory(name){
+    name=(name||"").trim(); if(!name) return;
+    state.cats=state.cats||[];
+    if(!state.cats.includes(name)) state.cats.push(name);
+    save(); renderTags();
   }
   $("addBtn").onclick=()=>{ addItem($("itemInput").value); $("itemInput").value=""; $("itemInput").focus(); };
   $("itemInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addItem(e.target.value); e.target.value=""; }});
+  $("catBtn").onclick=()=>{ addCategory($("catInput").value); $("catInput").value=""; $("catInput").focus(); };
+  $("catInput").addEventListener("keydown",e=>{ if(e.key==="Enter"){ addCategory(e.target.value); e.target.value=""; }});
 
   // ---- 개인 준비물 ----
   const openPeople = new Set();
