@@ -309,11 +309,11 @@
        4) 규칙(Rules)을 { "rules": { ".read": true, ".write": true } } 로
      ========================================================= */
   const firebaseConfig = {
-    apiKey: "",
+    apiKey: "AIzaSyDiGeohVOqs6TDsC2nwp6R1l8f6g3eGuyg",
     authDomain: "mtgo-dba8f.firebaseapp.com",
     databaseURL: "https://mtgo-dba8f-default-rtdb.firebaseio.com",
     projectId: "mtgo-dba8f",
-    appId: ""
+    appId: "1:46271800232:web:8545a7982c689de228339d"
   };
   const ROOM = "main";                       // 모두가 함께 쓰는 방
   const SYNC_ON = !!firebaseConfig.databaseURL;
@@ -553,7 +553,9 @@
         import("https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js"),
         import("https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js")
       ]);
-      const db = getDatabase(initializeApp(firebaseConfig));
+      const fbApp = initializeApp(firebaseConfig);
+      try{ const { getAuth, signInAnonymously } = await import("https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js"); await signInAnonymously(getAuth(fbApp)); }catch(e){ console.warn("익명 로그인 실패", e); }
+      const db = getDatabase(fbApp);
       const dbRef = ref(db, "rooms/"+ROOM);
       let timer=null;
       pushRemote = ()=>{ clearTimeout(timer); timer=setTimeout(()=>{ fbSet(dbRef, state).catch(()=>{}); }, 250); };
